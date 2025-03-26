@@ -1,59 +1,79 @@
-import React, { useCallback } from 'react';
-import { useTimeline } from '../../context/TimelineContext';
+"use client"
+
+import { useCallback } from "react"
+import { useTimeline } from "../../context/TimelineContext"
+import { Button } from "@/components/ui/button"
+import { FastForward, Pause, Play, Rewind } from "lucide-react"
 
 export default function PlayerControls({ playerRef }) {
-  const { state, dispatch } = useTimeline();
-  const { isPlaying, audioControls } = state;
+  const { state, dispatch } = useTimeline()
+  const { isPlaying, audioControls } = state
 
   const handlePlayPause = useCallback(() => {
-    const newPlayState = !isPlaying;
-    
+    const newPlayState = !isPlaying
+
     if (playerRef.current) {
       if (newPlayState) {
-        playerRef.current.play();
-        audioControls?.play();
+        playerRef.current.play()
+        audioControls?.play()
       } else {
-        playerRef.current.pause();
-        audioControls?.pause();
+        playerRef.current.pause()
+        audioControls?.pause()
       }
     }
 
-    dispatch({ type: 'SET_PLAYING', payload: newPlayState });
-  }, [isPlaying, audioControls, dispatch, playerRef]);
+    dispatch({ type: "SET_PLAYING", payload: newPlayState })
+  }, [isPlaying, audioControls, dispatch, playerRef])
 
-  const handleSeek = useCallback((timeMs) => {
-    if (playerRef.current) {
-      const frame = Math.floor((timeMs / 1000) * 30);
-      playerRef.current.seekTo(frame);
-    }
+  const handleSeek = useCallback(
+    (direction) => {
+      if (playerRef.current) {
+        const currentFrame = playerRef.current.getCurrentFrame()
+        const seekAmount = direction === "forward" ? 30 : -30 // Seek 1 second (at 30fps)
+        const newFrame = Math.max(0, currentFrame + seekAmount)
+        playerRef.current.seekTo(newFrame)
 
-    if (audioControls) {
-      audioControls.seek(timeMs / 1000);
-    }
+        const timeMs = (newFrame / 30) * 1000
 
-    dispatch({ type: 'SET_CURRENT_TIME', payload: timeMs });
-  }, [audioControls, dispatch, playerRef]);
+        if (audioControls) {
+          audioControls.seek(timeMs / 1000)
+        }
+
+        dispatch({ type: "SET_CURRENT_TIME", payload: timeMs })
+      }
+    },
+    [audioControls, dispatch, playerRef],
+  )
 
   return (
-    <div className="flex items-center justify-center space-x-4 mt-4">
-      <button
-        onClick={() => handleSeek('backward')}
-        className="p-2 rounded-full hover:bg-gray-200"
+    <div className="flex items-center justify-center space-x-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => handleSeek("backward")}
+        className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
       >
-        ⏪
-      </button>
-      <button
+        <Rewind className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="default"
+        size="icon"
         onClick={handlePlayPause}
-        className="p-2 rounded-full hover:bg-gray-200"
+        className="h-10 w-10 rounded-full bg-violet-600 hover:bg-violet-700"
       >
-        {isPlaying ? '⏸' : '▶️'}
-      </button>
-      <button
-        onClick={() => handleSeek('forward')}
-        className="p-2 rounded-full hover:bg-gray-200"
+        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => handleSeek("forward")}
+        className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
       >
-        ⏩
-      </button>
+        <FastForward className="h-4 w-4" />
+      </Button>
     </div>
-  );
+  )
 }
+
