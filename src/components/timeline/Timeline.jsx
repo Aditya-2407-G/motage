@@ -157,4 +157,3 @@ export default function Timeline({ playerRef }) {
     </Card>
   )
 }
-

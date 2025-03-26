@@ -6,7 +6,8 @@ const EFFECTS = {
   FADE: "fade",
   SLIDE_LEFT: "slide-left",
   SLIDE_RIGHT: "slide-right",
-  ZOOM: "zoom",
+  ZOOM_IN: "zoom-in",
+  ZOOM_OUT: "zoom-out",
   BLUR: "blur",
   NONE: "none",
 }
@@ -18,20 +19,48 @@ export default function MediaRenderer({ item }) {
   
   const inEffect = item.inEffect || EFFECTS.FADE
   const outEffect = item.outEffect || EFFECTS.FADE
-
-  // Calculate transition duration based on clip duration
-  // If clip is shorter than 1 second, make transition faster
   const transitionDuration = Math.min(item.duration / 4000, 0.5)
 
-  // Define transition variants
+  const getInitialState = (effect) => {
+    switch (effect) {
+      case EFFECTS.FADE:
+        return { opacity: 0 }
+      case EFFECTS.SLIDE_LEFT:
+        return { x: 100, opacity: 0 }
+      case EFFECTS.SLIDE_RIGHT:
+        return { x: -100, opacity: 0 }
+      case EFFECTS.ZOOM_IN:
+        return { scale: 0.5, opacity: 0 }
+      case EFFECTS.ZOOM_OUT:
+        return { scale: 1.5, opacity: 0 }
+      case EFFECTS.BLUR:
+        return { filter: "blur(10px)", opacity: 0 }
+      default:
+        return { opacity: 1 }
+    }
+  }
+
+  const getExitState = (effect) => {
+    switch (effect) {
+      case EFFECTS.FADE:
+        return { opacity: 0 }
+      case EFFECTS.SLIDE_LEFT:
+        return { x: -100, opacity: 0 }
+      case EFFECTS.SLIDE_RIGHT:
+        return { x: 100, opacity: 0 }
+      case EFFECTS.ZOOM_IN:
+        return { scale: 1.5, opacity: 0 }
+      case EFFECTS.ZOOM_OUT:
+        return { scale: 0.5, opacity: 0 }
+      case EFFECTS.BLUR:
+        return { filter: "blur(10px)", opacity: 0 }
+      default:
+        return { opacity: 1 }
+    }
+  }
+
   const variants = {
-    initial: {
-      opacity: inEffect === EFFECTS.FADE ? 0 : 1,
-      x: inEffect === EFFECTS.SLIDE_LEFT ? 100 : 
-         inEffect === EFFECTS.SLIDE_RIGHT ? -100 : 0,
-      scale: inEffect === EFFECTS.ZOOM ? 0.5 : 1,
-      filter: inEffect === EFFECTS.BLUR ? "blur(10px)" : "blur(0px)",
-    },
+    initial: getInitialState(inEffect),
     animate: {
       opacity: 1,
       x: 0,
@@ -42,17 +71,7 @@ export default function MediaRenderer({ item }) {
         ease: "easeOut"
       }
     },
-    exit: {
-      opacity: outEffect === EFFECTS.FADE ? 0 : 1,
-      x: outEffect === EFFECTS.SLIDE_LEFT ? -100 : 
-         outEffect === EFFECTS.SLIDE_RIGHT ? 100 : 0,
-      scale: outEffect === EFFECTS.ZOOM ? 1.5 : 1,
-      filter: outEffect === EFFECTS.BLUR ? "blur(10px)" : "blur(0px)",
-      transition: {
-        duration: transitionDuration,
-        ease: "easeIn"
-      }
-    }
+    exit: getExitState(outEffect)
   }
 
   const renderMedia = () => {

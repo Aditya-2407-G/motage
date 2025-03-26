@@ -6,6 +6,7 @@ import { Pause, Play, ZoomIn, ZoomOut, SkipBack, SkipForward, Scissors, Trash2 }
 import { Slider } from "@/components/ui/slider"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import TransitionEditor from './TransitionEditor'
 
 export default function TimelineControls({ playerRef }) {
   const { state, dispatch } = useTimeline()
@@ -87,6 +88,7 @@ export default function TimelineControls({ playerRef }) {
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-800">
+      {/* Left section with zoom controls */}
       <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
@@ -153,6 +155,7 @@ export default function TimelineControls({ playerRef }) {
         <div className="text-xs text-gray-400 ml-1">{Math.round(zoom * 100)}%</div>
       </div>
 
+      {/* Center section with playback controls */}
       <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
@@ -200,6 +203,7 @@ export default function TimelineControls({ playerRef }) {
         </TooltipProvider>
       </div>
 
+      {/* Right section with clip controls */}
       <div className="flex items-center gap-2">
         {selectedItem && (
           <>
@@ -224,6 +228,25 @@ export default function TimelineControls({ playerRef }) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
+                  <TransitionEditor 
+                    item={selectedItem}
+                    onUpdate={(updatedItem) => {
+                      dispatch({
+                        type: "UPDATE_ITEM",
+                        payload: updatedItem
+                      })
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-gray-900 border-gray-700 text-gray-200">
+                  Edit Transitions
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -238,56 +261,6 @@ export default function TimelineControls({ playerRef }) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            <Select
-              value={selectedItem.inEffect || "fade"}
-              onValueChange={(value) => {
-                dispatch({
-                  type: "UPDATE_ITEM",
-                  payload: {
-                    ...selectedItem,
-                    inEffect: value,
-                  },
-                })
-              }}
-            >
-              <SelectTrigger className="h-8 w-32 bg-gray-900 border-gray-700 text-gray-200 text-xs">
-                <SelectValue placeholder="In Effect" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
-                <SelectItem value="none">No Effect</SelectItem>
-                <SelectItem value="fade">Fade In</SelectItem>
-                <SelectItem value="slide-left">Slide Left</SelectItem>
-                <SelectItem value="slide-right">Slide Right</SelectItem>
-                <SelectItem value="zoom">Zoom In</SelectItem>
-                <SelectItem value="blur">Blur In</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={selectedItem.outEffect || "fade"}
-              onValueChange={(value) => {
-                dispatch({
-                  type: "UPDATE_ITEM",
-                  payload: {
-                    ...selectedItem,
-                    outEffect: value,
-                  },
-                })
-              }}
-            >
-              <SelectTrigger className="h-8 w-32 bg-gray-900 border-gray-700 text-gray-200 text-xs">
-                <SelectValue placeholder="Out Effect" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
-                <SelectItem value="none">No Effect</SelectItem>
-                <SelectItem value="fade">Fade Out</SelectItem>
-                <SelectItem value="slide-left">Slide Left</SelectItem>
-                <SelectItem value="slide-right">Slide Right</SelectItem>
-                <SelectItem value="zoom">Zoom Out</SelectItem>
-                <SelectItem value="blur">Blur Out</SelectItem>
-              </SelectContent>
-            </Select>
           </>
         )}
       </div>

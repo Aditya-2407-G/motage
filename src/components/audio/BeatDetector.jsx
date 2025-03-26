@@ -62,6 +62,16 @@ export default function BeatDetector() {
     },
   }
 
+  const transitionEffects = [
+    { value: "fade", label: "Fade" },
+    { value: "slide-left", label: "Slide Left" },
+    { value: "slide-right", label: "Slide Right" },
+    { value: "zoom-in", label: "Zoom In" },
+    { value: "zoom-out", label: "Zoom Out" },
+    { value: "blur", label: "Blur" },
+    { value: "none", label: "None" },
+  ]
+
   // Analyze beats and suggest a style
   const analyzeBeatPattern = useCallback((beats) => {
     if (!beats.length) return "every-beat"
@@ -281,11 +291,11 @@ export default function BeatDetector() {
                       <SelectValue placeholder="Select effect" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
-                      <SelectItem value="fade">Fade</SelectItem>
-                      <SelectItem value="slide-left">Slide Left</SelectItem>
-                      <SelectItem value="slide-right">Slide Right</SelectItem>
-                      <SelectItem value="zoom">Zoom</SelectItem>
-                      <SelectItem value="blur">Blur</SelectItem>
+                      {transitionEffects.map((effect) => (
+                        <SelectItem key={effect.value} value={effect.value}>
+                          {effect.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-400">
