@@ -1,4 +1,5 @@
-import { interpolate, useCurrentFrame } from "remotion"
+import { motion, AnimatePresence } from "framer-motion"
+import { useCurrentFrame } from "remotion"
 
 // Define transition effects
 const EFFECTS = {
@@ -12,139 +13,97 @@ const EFFECTS = {
 
 export default function MediaRenderer({ item }) {
   const frame = useCurrentFrame()
-
-  // Calculate how far we are into this item's duration (0 to 1)
-  const durationInFrames = (item.duration / 1000) * 30 // Convert ms to frames at 30fps
-  const progress = Math.min(frame / durationInFrames, 1) // Ensure progress doesn't exceed 1
-
-  // Default to fade effect if not specified
+  const durationInFrames = (item.duration / 1000) * 30
+  const progress = Math.min(frame / durationInFrames, 1)
+  
   const inEffect = item.inEffect || EFFECTS.FADE
   const outEffect = item.outEffect || EFFECTS.FADE
 
-  // Calculate transition durations (in frames)
-  const transitionFrames = Math.min(15, durationInFrames / 4) // 0.5 second or 1/4 of duration, whichever is shorter
+  // Calculate transition duration based on clip duration
+  // If clip is shorter than 1 second, make transition faster
+  const transitionDuration = Math.min(item.duration / 4000, 0.5)
 
-  // Calculate opacity for fade effect - ensure it's never fully transparent
-  const opacity = interpolate(
-    frame,
-    // Input range: start fade in, fully visible, start fade out, end
-    [0, transitionFrames, Math.max(durationInFrames - transitionFrames, transitionFrames + 1), durationInFrames],
-    // Output range: transparent to opaque to transparent
-    [inEffect === EFFECTS.FADE ? 0.2 : 1, 1, 1, outEffect === EFFECTS.FADE ? 0.2 : 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
+  // Define transition variants
+  const variants = {
+    initial: {
+      opacity: inEffect === EFFECTS.FADE ? 0 : 1,
+      x: inEffect === EFFECTS.SLIDE_LEFT ? 100 : 
+         inEffect === EFFECTS.SLIDE_RIGHT ? -100 : 0,
+      scale: inEffect === EFFECTS.ZOOM ? 0.5 : 1,
+      filter: inEffect === EFFECTS.BLUR ? "blur(10px)" : "blur(0px)",
     },
-  )
-
-  // Calculate transform effects
-  let transform = ""
-
-  // In effects
-  if (progress < transitionFrames / durationInFrames) {
-    const inProgress = Math.min(frame / transitionFrames, 1)
-
-    if (inEffect === EFFECTS.SLIDE_LEFT) {
-      const translateX = interpolate(inProgress, [0, 1], [100, 0])
-      transform += `translateX(${translateX}%) `
-    } else if (inEffect === EFFECTS.SLIDE_RIGHT) {
-      const translateX = interpolate(inProgress, [0, 1], [-100, 0])
-      transform += `translateX(${translateX}%) `
-    } else if (inEffect === EFFECTS.ZOOM) {
-      const scale = interpolate(inProgress, [0, 1], [0.5, 1])
-      transform += `scale(${scale}) `
+    animate: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      transition: {
+        duration: transitionDuration,
+        ease: "easeOut"
+      }
+    },
+    exit: {
+      opacity: outEffect === EFFECTS.FADE ? 0 : 1,
+      x: outEffect === EFFECTS.SLIDE_LEFT ? -100 : 
+         outEffect === EFFECTS.SLIDE_RIGHT ? 100 : 0,
+      scale: outEffect === EFFECTS.ZOOM ? 1.5 : 1,
+      filter: outEffect === EFFECTS.BLUR ? "blur(10px)" : "blur(0px)",
+      transition: {
+        duration: transitionDuration,
+        ease: "easeIn"
+      }
     }
   }
 
-  // Out effects
-  if (progress > (durationInFrames - transitionFrames) / durationInFrames && progress < 1) {
-    const outProgress = (frame - (durationInFrames - transitionFrames)) / transitionFrames
-
-    if (outEffect === EFFECTS.SLIDE_LEFT) {
-      const translateX = interpolate(outProgress, [0, 1], [0, -100])
-      transform += `translateX(${translateX}%) `
-    } else if (outEffect === EFFECTS.SLIDE_RIGHT) {
-      const translateX = interpolate(outProgress, [0, 1], [0, 100])
-      transform += `translateX(${translateX}%) `
-    } else if (outEffect === EFFECTS.ZOOM) {
-      const scale = interpolate(outProgress, [0, 1], [1, 1.5])
-      transform += `scale(${scale}) `
-    }
-  }
-
-  // Calculate blur for blur effect
-  let filter = ""
-  if (
-    (inEffect === EFFECTS.BLUR && progress < transitionFrames / durationInFrames) ||
-    (outEffect === EFFECTS.BLUR && progress > (durationInFrames - transitionFrames) / durationInFrames && progress < 1)
-  ) {
-    const blurAmount = interpolate(
-      frame,
-      [0, transitionFrames, durationInFrames - transitionFrames, durationInFrames],
-      [10, 0, 0, 10],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      },
-    )
-
-    filter = `blur(${blurAmount}px)`
-  }
-
-  if (item.type === "image") {
-    return (
-      <div
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#000",
-          opacity,
-        }}
-      >
-        <img
-          src={item.url || "/placeholder.svg"}
+  const renderMedia = () => {
+    if (item.type === "image") {
+      return (
+        <img 
+          src={item.url} 
+          alt={item.name || ""}
           style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
-            transform,
-            filter,
+            width: "100%",
+            height: "100%",
+            objectFit: "contain"
           }}
-          alt=""
         />
-      </div>
-    )
+      )
+    } else if (item.type === "video") {
+      return (
+        <video 
+          src={item.url}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain"
+          }}
+        />
+      )
+    }
+    return null
   }
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#000",
-        opacity,
-      }}
-    >
-      <video
-        src={item.url}
+    <AnimatePresence mode="sync">
+      <motion.div
+        key={item.id} // Important for AnimatePresence to work correctly
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={variants}
         style={{
-          maxWidth: "100%",
-          maxHeight: "100%",
-          objectFit: "contain",
-          transform,
-          filter,
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "black" // Add this to ensure proper background
         }}
-        muted
-      />
-    </div>
+      >
+        {renderMedia()}
+      </motion.div>
+    </AnimatePresence>
   )
 }
 
