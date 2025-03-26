@@ -11,8 +11,7 @@ import AudioUploader from './components/audio/AudioUploader';
 import BeatDetector from './components/audio/BeatDetector';
 import Timeline from './components/timeline/Timeline';
 import VideoSequence from './components/player/VideoSequence';
-import PlayerControls from './components/player/PlayerControls';
-import TransitionsPanel from './components/timeline/TransitionsPanel';
+
 import ExportModal from './components/export/ExportModal';
 import { useElementSize } from './hooks/useElementSize';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -75,7 +74,7 @@ function AppContent() {
         {/* Left Sidebar */}
         <div className="w-80 border-r border-gray-800 p-4">
           <Tabs defaultValue="media" className="h-full">
-            <TabsList className="grid w-full grid-cols-3 bg-gray-800">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800">
               <TabsTrigger value="media">
                 <Film className="w-4 h-4 mr-2" />
                 Media
@@ -84,10 +83,7 @@ function AppContent() {
                 <Music className="w-4 h-4 mr-2" />
                 Audio
               </TabsTrigger>
-              <TabsTrigger value="effects">
-                <Wand2 className="w-4 h-4 mr-2" />
-                Effects
-              </TabsTrigger>
+
             </TabsList>
             <TabsContent value="media" className="mt-4 h-full overflow-auto">
               <MediaUploader />
@@ -97,9 +93,7 @@ function AppContent() {
               <AudioUploader />
               <BeatDetector />
             </TabsContent>
-            <TabsContent value="effects" className="mt-4 h-full overflow-auto">
-              <TransitionsPanel />
-            </TabsContent>
+
           </Tabs>
         </div>
 

@@ -46,6 +46,19 @@ export default function Timeline({ playerRef }) {
     }
   }, [isPlaying, updateTime])
 
+  // Add this effect to handle end of playback
+  useEffect(() => {
+    if (currentTime >= duration && isPlaying) {
+      dispatch({ type: "SET_PLAYING", payload: false })
+      if (playerRef.current) {
+        playerRef.current.pause()
+      }
+      if (state.audioControls) {
+        state.audioControls.pause()
+      }
+    }
+  }, [currentTime, duration, isPlaying, dispatch, playerRef, state.audioControls])
+
   const handleTimelineClick = (e) => {
     const scrollContainer = e.currentTarget
     const bounds = scrollContainer.getBoundingClientRect()

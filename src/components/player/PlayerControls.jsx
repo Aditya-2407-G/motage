@@ -1,19 +1,38 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { useTimeline } from "../../context/TimelineContext"
 import { Button } from "@/components/ui/button"
 import { FastForward, Pause, Play, Rewind } from "lucide-react"
 
 export default function PlayerControls({ playerRef }) {
   const { state, dispatch } = useTimeline()
-  const { isPlaying, audioControls } = state
+  const { isPlaying, audioControls, duration, currentTime } = state
+
+  useEffect(() => {
+    if (currentTime >= duration && isPlaying) {
+      dispatch({ type: "SET_PLAYING", payload: false })
+      if (playerRef.current) {
+        playerRef.current.pause()
+      }
+      if (audioControls) {
+        audioControls.pause()
+      }
+    }
+  }, [currentTime, duration, isPlaying, dispatch, playerRef, audioControls])
 
   const handlePlayPause = useCallback(() => {
     const newPlayState = !isPlaying
 
     if (playerRef.current) {
       if (newPlayState) {
+        if (currentTime >= duration) {
+          playerRef.current.seekTo(0)
+          if (audioControls) {
+            audioControls.seek(0)
+          }
+          dispatch({ type: "SET_CURRENT_TIME", payload: 0 })
+        }
         playerRef.current.play()
         audioControls?.play()
       } else {
@@ -23,7 +42,7 @@ export default function PlayerControls({ playerRef }) {
     }
 
     dispatch({ type: "SET_PLAYING", payload: newPlayState })
-  }, [isPlaying, audioControls, dispatch, playerRef])
+  }, [isPlaying, audioControls, dispatch, playerRef, currentTime, duration])
 
   const handleSeek = useCallback(
     (direction) => {
