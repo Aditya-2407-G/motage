@@ -1,0 +1,44 @@
+{
+  "name": "testvite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.280",
+    "@remotion/media-utils": "^4.0.280",
+    "@remotion/motion-blur": "4.0.280",
+    "@remotion/paths": "^4.0.280",
+    "@remotion/player": "^4.0.280",
+    "@remotion/transitions": "4.0.280",
+    "@tailwindcss/vite": "^4.0.15",
+    "@xzdarcy/react-timeline-editor": "^0.1.9",
+    "classnames": "^2.5.1",
+    "framer-motion": "^12.6.0",
+    "interactjs": "^1.10.27",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.280",
+    "tailwindcss": "^4.0.15",
+    "tone": "^15.0.4",
+    "wavesurfer.js": "^7.9.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/react": "18.0.10",
+    "@types/react-dom": "18.0.4",
+    "@vitejs/plugin-react-swc": "^3.8.0",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.24.1",
+    "vite": "^6.2.0"
+  }
+}
