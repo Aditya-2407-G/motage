@@ -10,7 +10,7 @@ import MediaLibrary from './components/media/MediaLibrary';
 import AudioUploader from './components/audio/AudioUploader';
 import BeatDetector from './components/audio/BeatDetector';
 import Timeline from './components/timeline/Timeline';
-import VideoSequence from './components/player/VideoSequence';
+import { VideoSequence } from './components/player/VideoSequence';
 
 import ExportModal from './components/export/ExportModal';
 import { useElementSize } from './hooks/useElementSize';
@@ -36,7 +36,7 @@ function AppContent() {
   const timelineContainerSize = useElementSize(timelineContainerRef);
   const timelineContainerWidth = timelineContainerSize?.width;
   const [showExportModal, setShowExportModal] = useState(false);
-  const { state: { duration } } = useTimeline();
+  const { state: { duration, items, audio } } = useTimeline(); // Add items and audio from context
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden bg-gray-950">
@@ -104,6 +104,7 @@ function AppContent() {
             <div className="aspect-video bg-black rounded-lg w-full overflow-hidden" style={{ maxHeight: '60vh' }}>
               <Player
                 ref={playerRef}
+                id="remotion-player"
                 component={VideoSequence}
                 durationInFrames={Math.max(1, Math.ceil((duration / 1000) * 30))}
                 fps={30}
@@ -112,6 +113,11 @@ function AppContent() {
                 style={{
                   width: '100%',
                   height: '100%',
+                }}
+                inputProps={{
+                  items,
+                  audio,
+                  durationInFrames: Math.max(1, Math.ceil((duration / 1000) * 30))
                 }}
                 errorFallback={() => <div className="flex items-center justify-center h-full text-white">Something went wrong</div>}
                 loop={false}

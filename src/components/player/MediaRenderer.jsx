@@ -12,69 +12,21 @@ const EFFECTS = {
   NONE: "none",
 }
 
-export default function MediaRenderer({ item }) {
-  const frame = useCurrentFrame()
-  const durationInFrames = (item.duration / 1000) * 30
-  const progress = Math.min(frame / durationInFrames, 1)
-  
-  const inEffect = item.inEffect || EFFECTS.FADE
-  const outEffect = item.outEffect || EFFECTS.FADE
-  const transitionDuration = Math.min(item.duration / 4000, 0.5)
+export const MediaRenderer = ({ item, currentTimeMs }) => {
+  const startTime = item.startTime || 0;
+  const endTime = startTime + item.duration;
+  const isVisible = currentTimeMs >= startTime && currentTimeMs < endTime;
 
-  const getInitialState = (effect) => {
-    switch (effect) {
-      case EFFECTS.FADE:
-        return { opacity: 0 }
-      case EFFECTS.SLIDE_LEFT:
-        return { x: 100, opacity: 0 }
-      case EFFECTS.SLIDE_RIGHT:
-        return { x: -100, opacity: 0 }
-      case EFFECTS.ZOOM_IN:
-        return { scale: 0.5, opacity: 0 }
-      case EFFECTS.ZOOM_OUT:
-        return { scale: 1.5, opacity: 0 }
-      case EFFECTS.BLUR:
-        return { filter: "blur(10px)", opacity: 0 }
-      default:
-        return { opacity: 1 }
-    }
-  }
-
-  const getExitState = (effect) => {
-    switch (effect) {
-      case EFFECTS.FADE:
-        return { opacity: 0 }
-      case EFFECTS.SLIDE_LEFT:
-        return { x: -100, opacity: 0 }
-      case EFFECTS.SLIDE_RIGHT:
-        return { x: 100, opacity: 0 }
-      case EFFECTS.ZOOM_IN:
-        return { scale: 1.5, opacity: 0 }
-      case EFFECTS.ZOOM_OUT:
-        return { scale: 0.5, opacity: 0 }
-      case EFFECTS.BLUR:
-        return { filter: "blur(10px)", opacity: 0 }
-      default:
-        return { opacity: 1 }
-    }
-  }
-
+  // Define animation variants
   const variants = {
-    initial: getInitialState(inEffect),
-    animate: {
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: transitionDuration,
-        ease: "easeOut"
-      }
-    },
-    exit: getExitState(outEffect)
-  }
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
 
   const renderMedia = () => {
+    if (!isVisible) return null;
+
     if (item.type === "image") {
       return (
         <img 
@@ -86,7 +38,7 @@ export default function MediaRenderer({ item }) {
             objectFit: "contain"
           }}
         />
-      )
+      );
     } else if (item.type === "video") {
       return (
         <video 
@@ -97,15 +49,17 @@ export default function MediaRenderer({ item }) {
             objectFit: "contain"
           }}
         />
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
+
+  if (!isVisible) return null;
 
   return (
     <AnimatePresence mode="sync">
       <motion.div
-        key={item.id} // Important for AnimatePresence to work correctly
+        key={item.id}
         initial="initial"
         animate="animate"
         exit="exit"
@@ -117,12 +71,12 @@ export default function MediaRenderer({ item }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "black" // Add this to ensure proper background
+          backgroundColor: "black"
         }}
       >
         {renderMedia()}
       </motion.div>
     </AnimatePresence>
-  )
-}
+  );
 
+}
