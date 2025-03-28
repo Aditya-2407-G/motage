@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { useCurrentFrame } from "remotion"
 
 // Define transition effects
 const EFFECTS = {
@@ -30,7 +29,7 @@ export const MediaRenderer = ({ item, currentTimeMs }) => {
     if (item.type === "image") {
       return (
         <img 
-          src={item.url} 
+          src={item.url || "/placeholder.svg"} 
           alt={item.name || ""}
           style={{
             width: "100%",
@@ -78,5 +77,4 @@ export const MediaRenderer = ({ item, currentTimeMs }) => {
       </motion.div>
     </AnimatePresence>
   );
-
 }

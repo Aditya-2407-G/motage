@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react"
 import { useTimeline } from "../../context/TimelineContext"
 import { Button } from "@/components/ui/button"
-import { FastForward, Pause, Play, Rewind } from "lucide-react"
+import { FastForward, Pause, Play, Rewind } from 'lucide-react'
 
 export default function PlayerControls({ playerRef }) {
   const { state, dispatch } = useTimeline()
@@ -70,7 +70,7 @@ export default function PlayerControls({ playerRef }) {
         variant="ghost"
         size="icon"
         onClick={() => handleSeek("backward")}
-        className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+        className="h-9 w-9 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
       >
         <Rewind className="h-4 w-4" />
       </Button>
@@ -79,7 +79,7 @@ export default function PlayerControls({ playerRef }) {
         variant="default"
         size="icon"
         onClick={handlePlayPause}
-        className="h-10 w-10 rounded-full bg-violet-600 hover:bg-violet-700"
+        className="h-10 w-10 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 dark:from-violet-500 dark:to-indigo-500 dark:hover:from-violet-600 dark:hover:to-indigo-600 text-white border-0"
       >
         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
       </Button>
@@ -88,11 +88,10 @@ export default function PlayerControls({ playerRef }) {
         variant="ghost"
         size="icon"
         onClick={() => handleSeek("forward")}
-        className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+        className="h-9 w-9 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
       >
         <FastForward className="h-4 w-4" />
       </Button>
     </div>
   )
 }
-

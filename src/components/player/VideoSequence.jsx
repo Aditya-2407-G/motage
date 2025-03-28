@@ -1,5 +1,5 @@
 import { useCurrentFrame, useVideoConfig, Audio, AbsoluteFill } from "remotion";
-import { MediaRenderer } from "./MediaRenderer";  // Changed to named import
+import { MediaRenderer } from "./MediaRenderer";
 
 export const VideoSequence = ({ items = [], audio = null, durationInFrames }) => {
   const frame = useCurrentFrame();
@@ -52,5 +52,3 @@ export const VideoSequence = ({ items = [], audio = null, durationInFrames }) =>
     </AbsoluteFill>
   );
 };
-
-

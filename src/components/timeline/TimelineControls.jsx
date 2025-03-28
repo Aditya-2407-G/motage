@@ -2,7 +2,7 @@
 import { useTimeline } from "../../context/TimelineContext"
 import { useTimelineZoom } from "../../context/TimelineZoomContext"
 import { Button } from "@/components/ui/button"
-import { Pause, Play, ZoomIn, ZoomOut, Scissors, Trash2, Rewind, FastForward } from "lucide-react"
+import { Pause, Play, ZoomIn, ZoomOut, Scissors, Trash2, Rewind, FastForward } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function TimelineControls({ playerRef }) {
@@ -90,7 +90,7 @@ export default function TimelineControls({ playerRef }) {
   }
 
   return (
-    <div className="flex justify-between items-center p-2 border-t border-gray-800">
+    <div className="flex justify-between items-center p-2 border-t border-slate-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
       {/* Left section with playback controls */}
       <div className="flex items-center">
         <div className="flex items-center">
@@ -98,7 +98,7 @@ export default function TimelineControls({ playerRef }) {
             variant="ghost"
             size="icon"
             onClick={() => handleSeek("backward")}
-            className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            className="h-9 w-9 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
           >
             <Rewind className="h-4 w-4" />
           </Button>
@@ -107,7 +107,7 @@ export default function TimelineControls({ playerRef }) {
             variant="default"
             size="icon"
             onClick={handlePlayPause}
-            className="h-10 w-10 rounded-full bg-violet-600 hover:bg-violet-700 mx-2"
+            className="h-10 w-10 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 dark:from-violet-500 dark:to-indigo-500 dark:hover:from-violet-600 dark:hover:to-indigo-600 text-white border-0 mx-2"
           >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
           </Button>
@@ -116,7 +116,7 @@ export default function TimelineControls({ playerRef }) {
             variant="ghost"
             size="icon"
             onClick={() => handleSeek("forward")}
-            className="h-9 w-9 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            className="h-9 w-9 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
           >
             <FastForward className="h-4 w-4" />
           </Button>
@@ -134,12 +134,12 @@ export default function TimelineControls({ playerRef }) {
                     variant="ghost"
                     size="icon"
                     onClick={handleSplitAtPlayhead}
-                    className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                    className="h-8 w-8 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
                   >
                     <Scissors className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-gray-900 border-gray-700 text-gray-200">
+                <TooltipContent side="bottom" className="bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200">
                   Split at Playhead
                 </TooltipContent>
               </Tooltip>
@@ -152,12 +152,12 @@ export default function TimelineControls({ playerRef }) {
                     variant="ghost"
                     size="icon"
                     onClick={handleDeleteSelected}
-                    className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                    className="h-8 w-8 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-gray-900 border-gray-700 text-gray-200">
+                <TooltipContent side="bottom" className="bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200">
                   Delete Selected
                 </TooltipContent>
               </Tooltip>
@@ -166,7 +166,7 @@ export default function TimelineControls({ playerRef }) {
         )}
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-1 ml-4 border-l border-gray-700 pl-4">
+        <div className="flex items-center gap-1 ml-4 border-l border-slate-200 dark:border-gray-700 pl-4">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -174,12 +174,12 @@ export default function TimelineControls({ playerRef }) {
                   variant="ghost"
                   size="icon"
                   onClick={zoomOut}
-                  className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                  className="h-8 w-8 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 border-gray-700 text-gray-200">
+              <TooltipContent side="bottom" className="bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200">
                 Zoom Out
               </TooltipContent>
             </Tooltip>
@@ -189,7 +189,7 @@ export default function TimelineControls({ playerRef }) {
             variant="ghost"
             size="sm"
             onClick={zoomReset}
-            className="px-2 h-8 text-sm font-medium text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            className="px-2 h-8 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
           >
             {Math.round(zoom * 100)}%
           </Button>
@@ -201,12 +201,12 @@ export default function TimelineControls({ playerRef }) {
                   variant="ghost"
                   size="icon"
                   onClick={zoomIn}
-                  className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                  className="h-8 w-8 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 border-gray-700 text-gray-200">
+              <TooltipContent side="bottom" className="bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200">
                 Zoom In
               </TooltipContent>
             </Tooltip>
@@ -216,4 +216,3 @@ export default function TimelineControls({ playerRef }) {
     </div>
   )
 }
-

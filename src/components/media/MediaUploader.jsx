@@ -3,7 +3,7 @@
 import { useCallback } from "react"
 import { useMedia } from "../../context/MediaContext"
 import { Button } from "@/components/ui/button"
-import { ImagePlus, Video } from "lucide-react"
+import { ImagePlus, Video } from 'lucide-react'
 
 export default function MediaUploader({ type = "image" }) {
   const { dispatch } = useMedia()
@@ -47,7 +47,9 @@ export default function MediaUploader({ type = "image" }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-200">{type === "image" ? "Upload Images" : "Upload Videos"}</h3>
+        <h3 className="text-sm font-medium text-slate-800 dark:text-gray-200">
+          {type === "image" ? "Upload Images" : "Upload Videos"}
+        </h3>
       </div>
 
       <div className="relative">
@@ -60,14 +62,17 @@ export default function MediaUploader({ type = "image" }) {
         />
         <Button
           variant="outline"
-          className="w-full h-20 flex flex-col items-center justify-center gap-2 border-dashed bg-gray-900 border-gray-700 hover:bg-gray-800 text-gray-300"
+          className="w-full h-20 flex flex-col items-center justify-center gap-2 border-dashed 
+                   border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-slate-400 
+                   dark:border-gray-700 dark:bg-gray-800/50 dark:hover:bg-gray-800 dark:hover:border-gray-600 
+                   text-slate-600 dark:text-gray-300"
         >
           {type === "image" ? (
-            <ImagePlus className="h-5 w-5 text-gray-400" />
+            <ImagePlus className="h-5 w-5 text-slate-500 dark:text-gray-400" />
           ) : (
-            <Video className="h-5 w-5 text-gray-400" />
+            <Video className="h-5 w-5 text-slate-500 dark:text-gray-400" />
           )}
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-slate-500 dark:text-gray-400">
             {type === "image" ? "Drop images or click to browse" : "Drop videos or click to browse"}
           </span>
         </Button>
@@ -75,4 +80,3 @@ export default function MediaUploader({ type = "image" }) {
     </div>
   )
 }
-

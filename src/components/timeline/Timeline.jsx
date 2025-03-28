@@ -6,7 +6,7 @@ import { useTimelineSize } from "../../context/TimelinSizeProvider"
 import TimelineTrack from "./TimelineTrack"
 import TimelineControls from "./TimelineControls"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clock, ChevronDown, ChevronUp } from "lucide-react"
+import { Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -82,14 +82,14 @@ export default function Timeline({ playerRef }) {
   }
 
   return (
-    <Card className="border-2 border-gray-700 bg-gray-800">
-      <CardHeader className="pb-3 border-b border-gray-700 flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-200">
-          <Clock className="w-4 h-4" />
+    <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <CardHeader className="pb-3 border-b border-slate-200 dark:border-gray-800 flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-gray-200">
+          <Clock className="w-4 h-4 text-slate-500 dark:text-gray-400" />
           Timeline
         </CardTitle>
         <div className="flex items-center gap-2">
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-slate-600 dark:text-gray-400 font-medium">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
           <TooltipProvider>
@@ -98,13 +98,13 @@ export default function Timeline({ playerRef }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                  className="h-8 w-8 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 rounded-full"
                   onClick={() => setShowRuler(!showRuler)}
                 >
                   {showRuler ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left" className="bg-gray-900 border-gray-700 text-gray-200">
+              <TooltipContent side="left" className="bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-200">
                 {showRuler ? "Hide ruler" : "Show ruler"}
               </TooltipContent>
             </Tooltip>
@@ -114,7 +114,7 @@ export default function Timeline({ playerRef }) {
 
       <CardContent className="p-0">
         <div
-          className="relative h-[180px] overflow-x-auto bg-gray-900 border-b border-gray-700"
+          className="relative h-[180px] overflow-x-auto bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700"
           onClick={handleTimelineClick}
           style={{
             width: "100%",
