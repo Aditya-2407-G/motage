@@ -4,29 +4,15 @@ import { useCallback, useMemo } from "react";
 
 export const VideoSequence = ({ items = [], audio = null, durationInFrames }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const fps = useVideoConfig().fps;
   const currentTimeMs = (frame / fps) * 1000;
 
-  // Memoize visible items calculation
-  const visibleItems = useMemo(() => {
-    return items.filter((item) => {
-      const startTime = item.startTime || 0;
-      const endTime = startTime + item.duration;
-      return currentTimeMs >= startTime && currentTimeMs < endTime;
-    });
-  }, [items, currentTimeMs]);
-
-  // Remove console.logs in production
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('VideoSequence render:', {
-      frame,
-      currentTimeMs,
-      itemsCount: items?.length,
-      visibleItemsCount: visibleItems.length,
-      durationInFrames,
-      hasAudio: !!audio
-    });
-  }
+  // Filter visible items based on current time
+  const visibleItems = items.filter((item) => {
+    const itemStart = item.startTime;
+    const itemEnd = item.startTime + item.duration;
+    return currentTimeMs >= itemStart && currentTimeMs <= itemEnd;
+  });
 
   return (
     <AbsoluteFill style={{ backgroundColor: 'black' }}>
@@ -39,9 +25,9 @@ export const VideoSequence = ({ items = [], audio = null, durationInFrames }) =>
       ))}
       {audio?.url && (
         <Audio
-          src={audio.url}
-          startFrom={0}
-          endAt={durationInFrames}
+          src={audio.originalUrl || audio.url}
+          startFrom={Math.floor((audio.offset || 0) / 1000 * fps)}
+          endAt={Math.floor(((audio.offset || 0) + audio.duration) / 1000 * fps)}
           volume={1}
         />
       )}

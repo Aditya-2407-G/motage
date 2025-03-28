@@ -11,20 +11,105 @@ import { Label } from "@/components/ui/label"
 import { AudioWaveformIcon as Waveform, Zap } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+
+const formatTimeForInput = (seconds) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
+
+const parseTimeInput = (timeString) => {
+  const [mins, secs] = timeString.split(':').map(Number)
+  return (mins * 60) + secs
+}
 
 export default function BeatDetector() {
-  const {
-    state: { audio, images },
-  } = useMedia()
+  // Context hooks
+  const { state: { audio, images } } = useMedia()
   const { state: timelineState, dispatch: timelineDispatch } = useTimeline()
+
+  // State hooks - keep all useState calls at the top
   const [isStarted, setIsStarted] = useState(false)
-  const [montageStyle, setMontageStyle] = useState("auto") // Default to auto
+  const [montageStyle, setMontageStyle] = useState("auto")
   const [suggestedStyle, setSuggestedStyle] = useState(null)
   const [defaultEffect, setDefaultEffect] = useState("fade")
   const [customBeatInterval, setCustomBeatInterval] = useState(2)
   const [customTransitionDuration, setCustomTransitionDuration] = useState(0.3)
+  const [useTimeRange, setUseTimeRange] = useState(false)
+  const [startTime, setStartTime] = useState(0)
+  const [endTime, setEndTime] = useState(0)
 
+  // Audio analysis hook
   const { peaks, isAnalyzing, error } = useAudioAnalysis(isStarted ? audio?.url : null)
+
+  // Beat pattern analysis callback - MOVED UP
+  const analyzeBeatPattern = useCallback((beats) => {
+    if (!beats.length) return "every-beat"
+
+    // Calculate average tempo and energy
+    const tempos = []
+    for (let i = 1; i < beats.length; i++) {
+      tempos.push(beats[i].time - beats[i - 1].time)
+    }
+    const avgTempo = tempos.reduce((a, b) => a + b, 0) / tempos.length
+    const avgEnergy = beats.reduce((sum, b) => sum + b.energy, 0) / beats.length
+
+    // Analyze energy variation
+    const energyVariation = Math.sqrt(
+      beats.reduce((sum, b) => sum + Math.pow(b.energy - avgEnergy, 2), 0) / beats.length,
+    )
+
+    // Suggest style based on analysis
+    if (avgTempo < 0.3) {
+      // Fast tempo
+      return energyVariation > 0.2 ? "energy-based" : "every-beat"
+    } else if (avgTempo < 0.6) {
+      // Medium tempo
+      return energyVariation > 0.2 ? "progressive" : "every-other-beat"
+    } else {
+      // Slow tempo
+      return "every-fifth-beat"
+    }
+  }, [])
+
+  // Effect to set initial end time when audio loads
+  useEffect(() => {
+    if (audio?.duration) {
+      setEndTime(audio.duration / 1000)
+    }
+  }, [audio?.duration])
+
+  // Effect to update suggested style when beats are analyzed
+  useEffect(() => {
+    if (peaks.length > 0) {
+      const suggested = analyzeBeatPattern(peaks)
+      setSuggestedStyle(suggested)
+      if (montageStyle === "auto") {
+        setMontageStyle(suggested)
+      }
+    }
+  }, [peaks, analyzeBeatPattern, montageStyle])
+
+  // Callback for audio ready event
+  const handleAudioReady = useCallback(
+    (wavesurfer) => {
+      if (!wavesurfer) return
+      timelineDispatch({
+        type: "SET_DURATION",
+        payload: wavesurfer.getDuration() * 1000,
+      })
+    },
+    [timelineDispatch]
+  )
+
+  // Audio controller hook
+  const { containerRef } = useAudioController({
+    audioUrl: audio?.url,
+    onReady: handleAudioReady,
+    visualizerOnly: true,
+  })
 
   // Define different montage patterns with descriptions
   const montagePatterns = {
@@ -64,99 +149,73 @@ export default function BeatDetector() {
     { value: "none", label: "None" },
   ]
 
-  // Analyze beats and suggest a style
-  const analyzeBeatPattern = useCallback((beats) => {
-    if (!beats.length) return "every-beat"
-
-    // Calculate average tempo and energy
-    const tempos = []
-    for (let i = 1; i < beats.length; i++) {
-      tempos.push(beats[i].time - beats[i - 1].time)
-    }
-    const avgTempo = tempos.reduce((a, b) => a + b, 0) / tempos.length
-    const avgEnergy = beats.reduce((sum, b) => sum + b.energy, 0) / beats.length
-
-    // Analyze energy variation
-    const energyVariation = Math.sqrt(
-      beats.reduce((sum, b) => sum + Math.pow(b.energy - avgEnergy, 2), 0) / beats.length,
-    )
-
-    // Suggest style based on analysis
-    if (avgTempo < 0.3) {
-      // Fast tempo
-      return energyVariation > 0.2 ? "energy-based" : "every-beat"
-    } else if (avgTempo < 0.6) {
-      // Medium tempo
-      return energyVariation > 0.2 ? "progressive" : "every-other-beat"
-    } else {
-      // Slow tempo
-      return "every-fifth-beat"
-    }
-  }, [])
-
-  // Update suggested style when beats are analyzed
-  useEffect(() => {
-    if (peaks.length > 0) {
-      const suggested = analyzeBeatPattern(peaks)
-      setSuggestedStyle(suggested)
-      if (montageStyle === "auto") {
-        setMontageStyle(suggested)
-      }
-    }
-  }, [peaks, analyzeBeatPattern])
-
-  const handleAudioReady = useCallback(
-    (wavesurfer) => {
-      if (!wavesurfer) return
-
-      timelineDispatch({
-        type: "SET_DURATION",
-        payload: wavesurfer.getDuration() * 1000,
-      })
-    },
-    [timelineDispatch],
-  )
-
-  // We'll only use wavesurfer for visualization
-  const { containerRef } = useAudioController({
-    audioUrl: audio?.url,
-    onReady: handleAudioReady,
-    visualizerOnly: true,
-  })
-
-  const handleStart = () => {
-    setIsStarted(true)
-  }
-
-  // Update the handleSyncToBeats function to ensure there are no gaps between clips
+  // Sync to beats callback
   const handleSyncToBeats = useCallback(() => {
     if (!peaks.length || !images.length) return
 
     const activeStyle = montageStyle === "auto" ? suggestedStyle : montageStyle
     const pattern = montagePatterns[activeStyle]
     
-    // Apply the beat filter based on the selected pattern
-    const selectedBeats = pattern.filter(peaks)
+    // Adjust beat markers for the timeline
+    const adjustedBeatMarkers = useTimeRange 
+      ? peaks
+          .filter(peak => peak.time >= startTime && peak.time <= endTime)
+          .map(peak => ({
+            time: peak.time - startTime,
+            energy: peak.energy,
+          }))
+      : peaks.map(peak => ({
+          time: peak.time,
+          energy: peak.energy,
+        }))
 
     timelineDispatch({
       type: "SET_BEAT_MARKERS",
-      payload: peaks.map((peak) => ({
-        time: peak.time,
-        energy: peak.energy,
-      })),
+      payload: adjustedBeatMarkers,
     })
+
+    // Filter and adjust beats for the montage
+    let selectedBeats = pattern.filter(peaks)
+    if (useTimeRange) {
+      selectedBeats = selectedBeats
+        .filter(beat => beat.time >= startTime && beat.time <= endTime)
+        .map(beat => ({
+          ...beat,
+          time: beat.time - startTime
+        }))
+    }
 
     timelineDispatch({ type: "CLEAR_ITEMS" })
+
+    // Adjust audio start time and duration
+    const adjustedAudio = {
+      ...audio,
+      startTime: useTimeRange ? startTime * 1000 : 0,
+      offset: useTimeRange ? startTime * 1000 : 0,
+      // Add the original URL and duration for reference
+      originalUrl: audio.url,
+      duration: useTimeRange ? (endTime - startTime) * 1000 : audio.duration,
+    }
+
     timelineDispatch({
       type: "SET_AUDIO",
-      payload: audio,
+      payload: adjustedAudio,
     })
 
-    const totalDuration = peaks[peaks.length - 1].time * 1000 + 3000 // Add 3 seconds buffer
+    // Calculate adjusted duration
+    const totalDuration = useTimeRange 
+      ? (endTime - startTime) * 1000 + 3000 // Add 3 seconds buffer
+      : peaks[peaks.length - 1].time * 1000 + 3000
 
     timelineDispatch({
       type: "SET_DURATION",
       payload: totalDuration,
+    })
+
+    // Reset timeline current time to 0
+    timelineDispatch({
+      type: "SET_CURRENT_TIME",
+      payload: 0,
     })
 
     // Handle case when no beats are selected
@@ -187,7 +246,6 @@ export default function BeatDetector() {
 
       const imageIndex = index % images.length
 
-      // Get transition duration based on pattern
       const transitionDuration = activeStyle === "custom" 
         ? customTransitionDuration 
         : pattern.transitionDuration
@@ -203,11 +261,16 @@ export default function BeatDetector() {
           url: images[imageIndex].url,
           inEffect: defaultEffect,
           outEffect: defaultEffect,
-          transitionDuration: transitionDuration * 1000, // Convert to milliseconds
+          transitionDuration: transitionDuration * 1000,
         },
       })
     })
-  }, [peaks, images, timelineDispatch, audio, montageStyle, suggestedStyle, defaultEffect, customBeatInterval, customTransitionDuration])
+  }, [peaks, images, timelineDispatch, audio, montageStyle, suggestedStyle, defaultEffect, 
+      customBeatInterval, customTransitionDuration, useTimeRange, startTime, endTime])
+
+  const handleStart = () => {
+    setIsStarted(true)
+  }
 
   if (!audio?.url) {
     return (
@@ -349,6 +412,51 @@ export default function BeatDetector() {
                   <p className="text-xs text-gray-400">
                     This effect will be applied to all images. You can change individual effects later in the timeline.
                   </p>
+                </div>
+
+                {/* Time Range Selector */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="useTimeRange"
+                      checked={useTimeRange}
+                      onCheckedChange={setUseTimeRange}
+                      className="border-violet-600 text-violet-600"
+                    />
+                    <Label htmlFor="useTimeRange" className="text-sm font-medium text-gray-200">
+                      Use Custom Time Range
+                    </Label>
+                  </div>
+
+                  {useTimeRange && (
+                    <div className="mt-4 space-y-4 p-4 bg-gray-800 rounded-lg">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm text-gray-200">Start Time</Label>
+                          <Input
+                            type="time"
+                            step="1"
+                            value={formatTimeForInput(startTime)}
+                            onChange={(e) => setStartTime(parseTimeInput(e.target.value))}
+                            className="bg-gray-900 border-gray-700 text-gray-200"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-gray-200">End Time</Label>
+                          <Input
+                            type="time"
+                            step="1"
+                            value={formatTimeForInput(endTime)}
+                            onChange={(e) => setEndTime(parseTimeInput(e.target.value))}
+                            className="bg-gray-900 border-gray-700 text-gray-200"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        Select the time range for your montage. Only beats within this range will be used.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Button
