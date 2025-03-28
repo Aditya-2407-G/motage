@@ -25,6 +25,22 @@ const parseTimeInput = (timeString) => {
   return (mins * 60) + secs
 }
 
+const convertBlobToBase64 = async (blobUrl) => {
+  try {
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error converting blob:', error);
+    throw error;
+  }
+};
+
 export default function BeatDetector() {
   // Context hooks
   const { state: { audio, images } } = useMedia()
@@ -150,11 +166,27 @@ export default function BeatDetector() {
   ]
 
   // Sync to beats callback
-  const handleSyncToBeats = useCallback(() => {
+  const handleSyncToBeats = useCallback(async () => {
     if (!peaks.length || !images.length) return
 
     const activeStyle = montageStyle === "auto" ? suggestedStyle : montageStyle
     const pattern = montagePatterns[activeStyle]
+
+    // Convert audio blob URL to base64 if needed
+    let processedAudio = { ...audio };
+    if (audio?.url?.startsWith('blob:')) {
+      try {
+        const audioBase64 = await convertBlobToBase64(audio.url);
+        processedAudio = {
+          ...audio,
+          url: audioBase64,
+          originalUrl: audioBase64
+        };
+      } catch (error) {
+        console.error('Failed to convert audio blob:', error);
+        return;
+      }
+    }
     
     // Adjust beat markers for the timeline
     const adjustedBeatMarkers = useTimeRange 
@@ -189,12 +221,10 @@ export default function BeatDetector() {
 
     // Adjust audio start time and duration
     const adjustedAudio = {
-      ...audio,
+      ...processedAudio,
       startTime: useTimeRange ? startTime * 1000 : 0,
       offset: useTimeRange ? startTime * 1000 : 0,
-      // Add the original URL and duration for reference
-      originalUrl: audio.url,
-      duration: useTimeRange ? (endTime - startTime) * 1000 : audio.duration,
+      duration: useTimeRange ? (endTime - startTime) * 1000 : processedAudio.duration,
     }
 
     timelineDispatch({

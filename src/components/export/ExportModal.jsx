@@ -42,13 +42,14 @@ export default function ExportModal({ isOpen, onClose }) {
         }))
       );
 
-      // Convert audio URL if it exists
+      // Process audio if it's a blob URL
       let processedAudio = audio;
-      if (audio?.url && audio.url.startsWith('blob:')) {
+      if (audio?.url?.startsWith('blob:')) {
         const audioBase64 = await convertBlobToBase64(audio.url);
         processedAudio = {
           ...audio,
-          url: audioBase64
+          url: audioBase64,
+          originalUrl: audioBase64
         };
       }
 
