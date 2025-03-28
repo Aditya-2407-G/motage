@@ -5,6 +5,21 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'remotion': ['@remotion/player', '@remotion/renderer'],
+          'framer': ['framer-motion'],
+        }
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['@remotion/player', '@remotion/renderer', 'framer-motion']
+  },
   server: {
     port: 5173,
     proxy: {

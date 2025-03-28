@@ -21,6 +21,8 @@ export default function BeatDetector() {
   const [montageStyle, setMontageStyle] = useState("auto") // Default to auto
   const [suggestedStyle, setSuggestedStyle] = useState(null)
   const [defaultEffect, setDefaultEffect] = useState("fade")
+  const [customBeatInterval, setCustomBeatInterval] = useState(2)
+  const [customTransitionDuration, setCustomTransitionDuration] = useState(0.3)
 
   const { peaks, isAnalyzing, error } = useAudioAnalysis(isStarted ? audio?.url : null)
 
@@ -30,35 +32,25 @@ export default function BeatDetector() {
       label: "Every Beat (Fast)",
       description: "Changes image on every beat. Perfect for energetic, upbeat songs.",
       filter: (beats) => beats,
+      transitionDuration: 0.1, // Fast transitions for quick beats
     },
     "every-other-beat": {
       label: "Every Other Beat (Medium)",
       description: "Changes every second beat. Good for moderate tempo songs.",
       filter: (beats) => beats.filter((_, i) => i % 2 === 0),
+      transitionDuration: 0.3, // Medium transitions
     },
     "every-fifth-beat": {
       label: "Every Fifth Beat (Slow)",
       description: "Changes every fifth beat. Ideal for slow, emotional songs.",
       filter: (beats) => beats.filter((_, i) => i % 5 === 0),
+      transitionDuration: 1.0, // Slow, smooth transitions
     },
-    "energy-based": {
-      label: "Energy Based (Dynamic)",
-      description: "Changes on high-energy beats only. Adapts to song intensity.",
-      filter: (beats) => {
-        const averageEnergy = beats.reduce((sum, b) => sum + b.energy, 0) / beats.length
-        return beats.filter((beat) => beat.energy > averageEnergy)
-      },
-    },
-    progressive: {
-      label: "Progressive (Slow to Fast)",
-      description: "Starts slow and gradually increases pace. Great for building intensity.",
-      filter: (beats) => {
-        return beats.filter((_, i) => {
-          const progress = i / beats.length
-          const threshold = Math.pow(progress, 2)
-          return Math.random() < threshold
-        })
-      },
+    "custom": {
+      label: "Custom",
+      description: "Choose your own beat interval and transition duration.",
+      filter: (beats) => beats.filter((_, i) => i % customBeatInterval === 0),
+      transitionDuration: customTransitionDuration,
     },
   }
 
@@ -141,7 +133,10 @@ export default function BeatDetector() {
     if (!peaks.length || !images.length) return
 
     const activeStyle = montageStyle === "auto" ? suggestedStyle : montageStyle
-    const selectedBeats = montagePatterns[activeStyle].filter(peaks)
+    const pattern = montagePatterns[activeStyle]
+    
+    // Apply the beat filter based on the selected pattern
+    const selectedBeats = pattern.filter(peaks)
 
     timelineDispatch({
       type: "SET_BEAT_MARKERS",
@@ -157,13 +152,14 @@ export default function BeatDetector() {
       payload: audio,
     })
 
-    const totalDuration = peaks[peaks.length - 1].time * 1000 + 3000 // Add 3 seconds buffer at the end
+    const totalDuration = peaks[peaks.length - 1].time * 1000 + 3000 // Add 3 seconds buffer
+
     timelineDispatch({
       type: "SET_DURATION",
       payload: totalDuration,
     })
 
-    // Ensure we have at least one image even if no beats were detected
+    // Handle case when no beats are selected
     if (selectedBeats.length === 0 && images.length > 0) {
       timelineDispatch({
         type: "ADD_ITEM",
@@ -176,17 +172,25 @@ export default function BeatDetector() {
           url: images[0].url,
           inEffect: defaultEffect,
           outEffect: defaultEffect,
+          transitionDuration: pattern.transitionDuration * 1000,
         },
       })
       return
     }
 
+    // Create clips for each selected beat
     selectedBeats.forEach((beat, index) => {
       const nextBeat = selectedBeats[index + 1]
-      // If this is the last beat, make the duration extend to the end of the audio
-      const duration = nextBeat ? (nextBeat.time - beat.time) * 1000 : totalDuration - beat.time * 1000
+      const duration = nextBeat 
+        ? (nextBeat.time - beat.time) * 1000 
+        : totalDuration - beat.time * 1000
 
       const imageIndex = index % images.length
+
+      // Get transition duration based on pattern
+      const transitionDuration = activeStyle === "custom" 
+        ? customTransitionDuration 
+        : pattern.transitionDuration
 
       timelineDispatch({
         type: "ADD_ITEM",
@@ -199,10 +203,11 @@ export default function BeatDetector() {
           url: images[imageIndex].url,
           inEffect: defaultEffect,
           outEffect: defaultEffect,
+          transitionDuration: transitionDuration * 1000, // Convert to milliseconds
         },
       })
     })
-  }, [peaks, images, timelineDispatch, audio, montageStyle, suggestedStyle, defaultEffect])
+  }, [peaks, images, timelineDispatch, audio, montageStyle, suggestedStyle, defaultEffect, customBeatInterval, customTransitionDuration])
 
   if (!audio?.url) {
     return (
@@ -267,6 +272,49 @@ export default function BeatDetector() {
                     </div>
                   ))}
                 </RadioGroup>
+
+                {/* Custom Beat Settings */}
+                {montageStyle === "custom" && (
+                  <div className="mt-4 space-y-4 p-4 bg-gray-800 rounded-lg">
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-200">Beat Interval</Label>
+                      <Select 
+                        value={customBeatInterval.toString()} 
+                        onValueChange={(value) => setCustomBeatInterval(Number(value))}
+                      >
+                        <SelectTrigger className="bg-gray-900 border-gray-700 text-gray-200">
+                          <SelectValue placeholder="Select interval" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
+                          {[1, 2, 3, 4, 5, 6, 8, 10].map((interval) => (
+                            <SelectItem key={interval} value={interval.toString()}>
+                              Every {interval}{interval === 1 ? 'st' : interval === 2 ? 'nd' : interval === 3 ? 'rd' : 'th'} beat
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-200">Transition Duration (seconds)</Label>
+                      <Select 
+                        value={customTransitionDuration.toString()} 
+                        onValueChange={(value) => setCustomTransitionDuration(Number(value))}
+                      >
+                        <SelectTrigger className="bg-gray-900 border-gray-700 text-gray-200">
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
+                          {[0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0].map((duration) => (
+                            <SelectItem key={duration} value={duration.toString()}>
+                              {duration} seconds
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 {/* Style Description */}
                 <div className="bg-gray-900 p-3 rounded-md">
