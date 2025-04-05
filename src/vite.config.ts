@@ -6,13 +6,13 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://motage.onrender.com',
+        target: 'https://motage.onrender.com:8000',
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       },
       '/rendered': {
-        target: 'https://motage.onrender.com',
+        target: 'https://motage.onrender.com:8000',
         changeOrigin: true,
         secure: true
       }
