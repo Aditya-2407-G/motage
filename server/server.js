@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8000;
 
 // Increase timeout for large renders
 app.timeout = 300000; // 5 minutes
