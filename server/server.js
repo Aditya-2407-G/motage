@@ -19,8 +19,14 @@ app.timeout = 300000; // 5 minutes
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'https://motage.onrender.com' || "http://localhost:5173",
-  credentials: true
+  origin: [
+    'https://motage.onrender.com',     // Your production frontend URL
+    'http://localhost:5173',           // Your local development frontend URL
+    'https://motage.vercel.app'        // If you're also deploying frontend to Vercel
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
@@ -34,6 +40,8 @@ app.use('/rendered', express.static(path.join(__dirname, 'rendered'), {
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.set('Cross-Origin-Opener-Policy', 'same-origin');
   }
 }));
 
@@ -60,4 +68,5 @@ process.on('SIGINT', () => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
