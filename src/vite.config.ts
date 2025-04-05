@@ -8,15 +8,16 @@ export default defineConfig({
       '/api': {
         target: 'https://motage.onrender.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       },
       '/rendered': {
         target: 'https://motage.onrender.com',
         changeOrigin: true,
-        secure: false
+        secure: true
       }
     }
   }
 });
+
 
