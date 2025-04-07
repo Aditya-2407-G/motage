@@ -161,7 +161,6 @@ export default function BeatDetector() {
     { value: "slide-right", label: "Slide Right" },
     { value: "zoom-in", label: "Zoom In" },
     { value: "zoom-out", label: "Zoom Out" },
-    { value: "blur", label: "Blur" },
     { value: "none", label: "None" },
   ]
 
