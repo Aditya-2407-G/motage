@@ -19,12 +19,15 @@ export default function ClientSideRenderer({
   audio = null,
   duration = 0,
   fps = 30,
-  filename = 'my-montage',
+  filename = '',
+  quality,
   onProgress = () => {},
   onComplete = () => {},
   onError = () => {}
 }) {
   const canvasRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const gainNodeRef = useRef(null);
   const [debug, setDebug] = useState('');
 
   // Start rendering when component mounts
@@ -86,11 +89,11 @@ export default function ClientSideRenderer({
   // Start rendering process
   const startRendering = async () => {
     try {
-      // Set up canvas
+      // Set up canvas with quality dimensions
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      canvas.width = 1920;
-      canvas.height = 1080;
+      canvas.width = quality.width;
+      canvas.height = quality.height;
 
       // Calculate total frames
       const durationInSeconds = duration / 1000;
@@ -104,35 +107,64 @@ export default function ClientSideRenderer({
       let audioElement = null;
       if (audio?.url) {
         try {
+          // Create and configure audio context
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+            sampleRate: 48000, // Higher sample rate for better quality
+            latencyHint: 'playback'
+          });
+
           // Create audio element
           audioElement = new Audio();
+          audioElement.crossOrigin = 'anonymous';
           audioElement.src = audio.url;
-          await new Promise((resolve) => {
-            audioElement.onloadeddata = resolve;
+          
+          // Wait for audio to be loaded
+          await new Promise((resolve, reject) => {
+            audioElement.addEventListener('loadeddata', resolve, { once: true });
+            audioElement.addEventListener('error', reject, { once: true });
             audioElement.load();
           });
 
-          // Create audio context and connect to stream
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const source = audioCtx.createMediaElementSource(audioElement);
-          const dest = audioCtx.createMediaStreamDestination();
-          source.connect(dest);
+          // Create and configure audio nodes
+          const source = audioContextRef.current.createMediaElementSource(audioElement);
+          gainNodeRef.current = audioContextRef.current.createGain();
+          const compressor = audioContextRef.current.createDynamicsCompressor();
+          const dest = audioContextRef.current.createMediaStreamDestination();
+
+          // Set up audio processing chain
+          source
+            .connect(gainNodeRef.current)
+            .connect(compressor)
+            .connect(dest);
+
+          // Fine-tune compressor settings
+          compressor.threshold.value = -24;
+          compressor.knee.value = 30;
+          compressor.ratio.value = 12;
+          compressor.attack.value = 0.003;
+          compressor.release.value = 0.25;
+
+          // Set initial gain
+          gainNodeRef.current.gain.value = 0.8; // Slightly reduce volume to prevent clipping
 
           // Add audio tracks to video stream
           dest.stream.getAudioTracks().forEach(track => {
             stream.addTrack(track);
           });
+
         } catch (error) {
           console.error('Audio setup error:', error);
+          // Continue without audio if setup fails
         }
       }
 
-      // Find supported MIME type - try to use WebM with VP8 codec for best compatibility
+      // Configure media recorder with optimized settings
       const mimeTypes = [
-        'video/webm;codecs=vp8,opus',
-        'video/webm;codecs=vp8',
-        'video/webm',
-        'video/mp4'
+        'video/mp4;codecs=h264,aac',
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4',
+        'video/webm;codecs=h264,opus',
+        'video/webm'
       ];
 
       let mimeType = '';
@@ -147,12 +179,11 @@ export default function ClientSideRenderer({
         throw new Error('No supported video format found');
       }
 
-      console.log('Using MIME type:', mimeType);
-
-      // Create media recorder
+      // Create media recorder with optimized settings
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 3000000
+        videoBitsPerSecond: quality.bitrate,
+        audioBitsPerSecond: 128000 // Consistent audio bitrate
       });
 
       // Collect video data
@@ -168,31 +199,31 @@ export default function ClientSideRenderer({
 
       // Handle recording completion
       mediaRecorder.onstop = () => {
-        // Prevent multiple completions
         if (completed) return;
         completed = true;
 
-        // Get the base MIME type (without codecs)
+        // Clean up audio resources
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.src = '';
+        }
+
         const baseType = mimeType.split(';')[0];
-        console.log('Creating blob with type:', baseType);
-
-        // Create a blob with the correct MIME type
         const videoBlob = new Blob(chunks, { type: baseType });
-
-        // Create a URL for the blob
         const videoUrl = URL.createObjectURL(videoBlob);
-
-        // Pass the URL and MIME type to the completion handler
         onComplete(videoUrl, baseType);
       };
 
-      // Start recording
-      mediaRecorder.start(100);
+      // Start recording with larger timeslice for more stable audio
+      mediaRecorder.start(1000); // 1 second chunks
 
-      // Start audio if available
+      // Start audio playback if available
       if (audioElement) {
         audioElement.currentTime = (audio.offset || 0) / 1000;
-        await audioElement.play().catch(err => console.error('Audio play error:', err));
+        await audioElement.play();
       }
 
       // Preload all images to avoid flickering
@@ -257,10 +288,10 @@ export default function ClientSideRenderer({
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw frame number for debugging (smaller and less intrusive)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '16px Arial';
-        ctx.fillText(`Frame: ${frameCount}, Time: ${Math.round(currentTimeMs)}ms`, 10, 20);
+        // // Draw frame number for debugging (smaller and less intrusive)
+        // ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        // ctx.font = '16px Arial';
+        // ctx.fillText(`Frame: ${frameCount}, Time: ${Math.round(currentTimeMs)}ms`, 10, 20);
 
         // Find visible items with transition information - exactly matching Remotion's VideoSequence.jsx
         const visibleItems = items.filter(item => {

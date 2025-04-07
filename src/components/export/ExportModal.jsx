@@ -12,6 +12,7 @@ export default function ExportModal({ isOpen, onClose }) {
   const [exporting, setExporting] = useState(false);
   const [filename, setFilename] = useState('my-montage');
   const [progress, setProgress] = useState(0);
+  const [quality, setQuality] = useState('medium'); // Add quality state
   const [mp4Supported, setMp4Supported] = useState(false);
   const [converting, setConverting] = useState(false);
   const { state: { items, audio, duration } } = useTimeline();
@@ -136,6 +137,28 @@ export default function ExportModal({ isOpen, onClose }) {
     alert('Export failed. Please try again.');
   };
 
+  // Define quality presets
+  const qualityPresets = {
+    low: {
+      bitrate: 1000000, // 1 Mbps
+      label: 'Low (480p)',
+      width: 854,
+      height: 480
+    },
+    medium: {
+      bitrate: 3000000, // 3 Mbps
+      label: 'Medium (720p)',
+      width: 1280,
+      height: 720
+    },
+    high: {
+      bitrate: 8000000, // 8 Mbps
+      label: 'High (1080p)',
+      width: 1920,
+      height: 1080
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] bg-gray-800 border-gray-700 text-gray-200">
@@ -154,6 +177,23 @@ export default function ExportModal({ isOpen, onClose }) {
               placeholder="Enter filename"
               disabled={exporting}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Quality</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {Object.entries(qualityPresets).map(([key, preset]) => (
+                <Button
+                  key={key}
+                  variant={quality === key ? "default" : "outline"}
+                  className={`${quality === key ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-blue-500`}
+                  onClick={() => setQuality(key)}
+                  disabled={exporting}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2">
@@ -200,6 +240,7 @@ export default function ExportModal({ isOpen, onClose }) {
               duration={duration}
               fps={30}
               filename={filename}
+              quality={qualityPresets[quality]}
               onProgress={setProgress}
               onComplete={handleComplete}
               onError={handleError}
