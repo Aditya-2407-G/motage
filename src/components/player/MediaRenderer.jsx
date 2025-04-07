@@ -9,7 +9,6 @@ const EFFECTS = {
   SLIDE_RIGHT: "slide-right",
   ZOOM_IN: "zoom-in",
   ZOOM_OUT: "zoom-out",
-  BLUR: "blur",
   NONE: "none",
 }
 
@@ -59,10 +58,6 @@ export const MediaRenderer = memo(({ item, currentTimeMs }) => {
           style.transform = `scale(${interpolate(entranceProgress, [0, 1], [1.2, 1])})`;
           style.opacity = interpolate(entranceProgress, [0, 1], [0, 1]);
           break;
-        case "blur":
-          style.filter = `blur(${interpolate(entranceProgress, [0, 1], [10, 0])}px)`;
-          style.opacity = interpolate(entranceProgress, [0, 1], [0, 1]);
-          break;
       }
     }
 
@@ -84,10 +79,6 @@ export const MediaRenderer = memo(({ item, currentTimeMs }) => {
           break;
         case "zoom-out":
           style.transform = `scale(${interpolate(exitProgress, [0, 1], [1, 0.8])})`;
-          style.opacity = interpolate(exitProgress, [0, 1], [1, 0]);
-          break;
-        case "blur":
-          style.filter = `blur(${interpolate(exitProgress, [0, 1], [0, 10])}px)`;
           style.opacity = interpolate(exitProgress, [0, 1], [1, 0]);
           break;
       }
