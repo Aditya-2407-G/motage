@@ -330,6 +330,10 @@ export default function ClientSideRenderer({
   // Draw a single item on the canvas - matching Remotion's MediaRenderer.jsx
   const drawItem = async (ctx, item, currentTimeMs, imageCache = new Map()) => {
     try {
+      // Get canvas reference
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
       // Extract item properties with defaults
       const { id, type, url, rotation = 0, opacity = 1 } = item;
 
@@ -342,30 +346,17 @@ export default function ClientSideRenderer({
       // If dimensions are missing, use defaults based on canvas size
       if (width <= 0 || height <= 0) {
         if (type === 'image' || type === 'video') {
-          // Use 80% of canvas size for images/videos with missing dimensions
-          const canvas = canvasRef.current;
           width = width <= 0 ? Math.round(canvas.width * 0.8) : width;
           height = height <= 0 ? Math.round(canvas.height * 0.8) : height;
 
-          // Center the item if position is (0,0)
           if (x === 0 && y === 0) {
             x = Math.round((canvas.width - width) / 2);
             y = Math.round((canvas.height - height) / 2);
           }
-
-          console.log(`Applied default dimensions: (${x}, ${y}), size: ${width}x${height}`);
         }
       }
 
-      console.log(`Drawing item: ${id || 'unknown'}, type: ${type}, at position: (${x}, ${y}), size: ${width}x${height}`);
-
-      // Skip if no URL for media items
-      if ((type === 'image' || type === 'video') && !url) {
-        console.warn(`Missing URL for ${type} item:`, item);
-        return;
-      }
-
-      // Get transition information - using the same property names as in MediaRenderer.jsx
+      // Get transition information
       const entranceProgress = item.entranceProgress || 1;
       const exitProgress = item.exitProgress || 0;
       const isEntering = item.isEntering || false;
@@ -392,10 +383,10 @@ export default function ClientSideRenderer({
               style.opacity = interpolate(entranceProgress, [0, 1], [0, 1]);
               break;
             case "slide-left":
-              style.transform = `translateX(${interpolate(entranceProgress, [0, 1], [100, 0])}%)`;
+              style.transform = `translateX(${interpolate(entranceProgress, [0, 1], [canvas.width, 0])}px)`;
               break;
             case "slide-right":
-              style.transform = `translateX(${interpolate(entranceProgress, [0, 1], [-100, 0])}%)`;
+              style.transform = `translateX(${interpolate(entranceProgress, [0, 1], [-canvas.width, 0])}px)`;
               break;
             case "zoom-in":
               style.transform = `scale(${interpolate(entranceProgress, [0, 1], [0.8, 1])})`;
@@ -403,10 +394,6 @@ export default function ClientSideRenderer({
               break;
             case "zoom-out":
               style.transform = `scale(${interpolate(entranceProgress, [0, 1], [1.2, 1])})`;
-              style.opacity = interpolate(entranceProgress, [0, 1], [0, 1]);
-              break;
-            case "blur":
-              style.filter = `blur(${interpolate(entranceProgress, [0, 1], [10, 0])}px)`;
               style.opacity = interpolate(entranceProgress, [0, 1], [0, 1]);
               break;
           }
@@ -419,10 +406,10 @@ export default function ClientSideRenderer({
               style.opacity = interpolate(exitProgress, [0, 1], [1, 0]);
               break;
             case "slide-left":
-              style.transform = `translateX(${interpolate(exitProgress, [0, 1], [0, -100])}%)`;
+              style.transform = `translateX(${interpolate(exitProgress, [0, 1], [0, -canvas.width])}px)`;
               break;
             case "slide-right":
-              style.transform = `translateX(${interpolate(exitProgress, [0, 1], [0, 100])}%)`;
+              style.transform = `translateX(${interpolate(exitProgress, [0, 1], [0, canvas.width])}px)`;
               break;
             case "zoom-in":
               style.transform = `scale(${interpolate(exitProgress, [0, 1], [1, 1.2])})`;
@@ -432,17 +419,13 @@ export default function ClientSideRenderer({
               style.transform = `scale(${interpolate(exitProgress, [0, 1], [1, 0.8])})`;
               style.opacity = interpolate(exitProgress, [0, 1], [1, 0]);
               break;
-            case "blur":
-              style.filter = `blur(${interpolate(exitProgress, [0, 1], [0, 10])}px)`;
-              style.opacity = interpolate(exitProgress, [0, 1], [1, 0]);
-              break;
           }
         }
 
         return style;
       };
 
-      // Get animation style
+      // Get and apply animation style
       const animationStyle = getAnimationStyle();
 
       // Apply style to canvas transformations
@@ -458,25 +441,28 @@ export default function ClientSideRenderer({
           transitionScale = parseFloat(scaleMatch[1]);
         }
 
-        // Handle translateX transform
-        const translateXMatch = animationStyle.transform.match(/translateX\(([\d.-]+)%\)/);
-        if (translateXMatch && translateXMatch[1]) {
-          const translateXPercent = parseFloat(translateXMatch[1]);
-          transitionX = x + (width * translateXPercent / 100);
+        // Handle translateX transform - check for both px and % units
+        if (animationStyle.transform.includes('translateX')) {
+          const pxMatch = animationStyle.transform.match(/translateX\(([\d.-]+)px\)/);
+          if (pxMatch && pxMatch[1]) {
+            const translateX = parseFloat(pxMatch[1]);
+            transitionX = x + translateX;
+          }
         }
-      }
-
-      // Apply filter styles
-      if (animationStyle.filter) {
-        transitionFilter = animationStyle.filter;
       }
 
       // Apply transformations
       ctx.save();
+      
+      // Create a clipping region for the item's bounds
+      ctx.beginPath();
+      ctx.rect(x, y, width, height);
+      ctx.clip();
+      
+      // Set opacity
       ctx.globalAlpha = transitionOpacity;
 
       // Apply all transformations
-      // First, move to the item's position
       ctx.translate(transitionX, transitionY);
 
       // For scale and rotation, we need to work from the center
