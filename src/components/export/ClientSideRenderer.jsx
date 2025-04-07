@@ -533,18 +533,18 @@ export default function ClientSideRenderer({
             imageCache.set(url, img);
           }
 
-          // Draw the image
-          ctx.drawImage(img, x, y, width, height);
+
+          ctx.drawImage(img, 0, 0, width, height);
         } catch (error) {
           console.error('Error rendering image:', error);
 
           // Draw error placeholder
           ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-          ctx.fillRect(x, y, width, height);
+          ctx.fillRect(0, 0, width, height);
           ctx.fillStyle = 'white';
           ctx.font = '16px Arial';
-          ctx.fillText('Image Error', x + 10, y + height / 2);
-          ctx.fillText(url.substring(0, 30) + '...', x + 10, y + height / 2 + 20);
+          ctx.fillText('Image Error', 10, height / 2);
+          ctx.fillText(url.substring(0, 30) + '...', 10, height / 2 + 20);
         }
       }
       else if (type === 'video') {
@@ -565,7 +565,8 @@ export default function ClientSideRenderer({
 
         // Set video time and draw frame
         video.currentTime = videoTime / 1000;
-        ctx.drawImage(video, x, y, width, height);
+
+        ctx.drawImage(video, 0, 0, width, height);
       }
       else if (type === 'text') {
         const text = item.text || '';
@@ -576,7 +577,8 @@ export default function ClientSideRenderer({
         ctx.font = `${fontSize}px ${fontFamily}`;
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
-        ctx.fillText(text, x, y);
+
+        ctx.fillText(text, 0, 0);
       }
 
       // Only draw minimal debug info if needed
@@ -620,11 +622,11 @@ export default function ClientSideRenderer({
       ctx.restore();
     } catch (error) {
       console.error('Error drawing item:', error);
-      // Draw error indicator
+      // Draw error indicator - use 0,0 since we've already translated the context
       ctx.fillStyle = 'red';
-      ctx.fillRect(x || 0, y || 0, 100, 100);
+      ctx.fillRect(0, 0, 100, 100);
       ctx.fillStyle = 'white';
-      ctx.fillText(`Error: ${error.message}`, x || 0, (y || 0) + 50);
+      ctx.fillText(`Error: ${error.message}`, 10, 50);
       // Continue with other items if one fails
     }
   };
