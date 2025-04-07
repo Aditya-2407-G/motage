@@ -160,11 +160,9 @@ export default function ClientSideRenderer({
 
       // Configure media recorder with optimized settings
       const mimeTypes = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // H.264 Baseline + AAC LC
         'video/mp4;codecs=h264,aac',
-        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-        'video/mp4',
-        'video/webm;codecs=h264,opus',
-        'video/webm'
+        'video/mp4'
       ];
 
       let mimeType = '';
