@@ -20,22 +20,6 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@remotion/player', '@remotion/renderer', 'framer-motion']
   },
-  server: {
-    port: 5173,
-    proxy: {
-      '^/api/.*': {
-        target: 'https://motage.onrender.com',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-      '^/rendered/.*': {
-        target: 'https://motage.onrender.com',
-        changeOrigin: true,
-        secure: false,
-      }
-    }
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

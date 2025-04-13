@@ -12,7 +12,6 @@ export default function TransitionEditor({ item, onUpdate, triggerComponent }) {
     { value: "slide-right", label: "Slide Right" },
     { value: "zoom-in", label: "Zoom In" },
     { value: "zoom-out", label: "Zoom Out" },
-    { value: "blur", label: "Blur" },
     { value: "none", label: "None" },
   ]
 
@@ -83,4 +82,5 @@ export default function TransitionEditor({ item, onUpdate, triggerComponent }) {
     </Popover>
   )
 }
+
 
