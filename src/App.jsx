@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Player } from '@remotion/player'
 import { MediaProvider } from './context/MediaContext'
 import { TimelineProvider, useTimeline } from './context/TimelineContext'
@@ -18,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Film, Music, Wand2, Download, Settings, Sparkles } from 'lucide-react'
 
-export default function App() {
+const App = () => {
   return (
     <MediaProvider>
       <TimelineProvider>
@@ -153,3 +151,6 @@ function AppContent() {
     </div>
   )
 }
+
+
+export default App
